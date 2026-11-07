@@ -50,7 +50,6 @@ final class TouchControls {
 
     TouchControls() {
         label.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        label.setTextAlign(Paint.Align.CENTER);
     }
 
     private List<Button> layout() { return menuLayout ? menu : game; }
@@ -104,7 +103,13 @@ final class TouchControls {
             c.drawCircle((float) b.cx, (float) b.cy, (float) b.r, fill);
             label.setColor(on ? Color.BLACK : Color.argb(200, 255, 255, 255));
             label.setTextSize(b.label.length() > 2 ? 13 : 20);
-            c.drawText(b.label, (float) b.cx, (float) b.cy + 5, label);
+            Paint.FontMetrics fm = label.getFontMetrics();
+
+            float textWidth = label.measureText(b.label);
+            float textX = (float) b.cx - textWidth / 2f;
+            float textY = (float) b.cy - (fm.ascent + fm.descent) / 2f;
+
+            c.drawText(b.label, textX, textY, label);
         }
     }
 }
