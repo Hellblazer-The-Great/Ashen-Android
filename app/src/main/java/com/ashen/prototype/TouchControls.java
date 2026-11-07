@@ -36,6 +36,17 @@ final class TouchControls {
     TouchControls(Ui ui) {
         for (Map<String, String> b : ui.buttons("game")) game.add(fromXml(b));
         for (Map<String, String> b : ui.buttons("menu")) menu.add(fromXml(b));
+        joyRadius = ui.num("move", "radius", 80);
+        joyDead = ui.num("move", "deadzone", 0.12);
+        joyHomeX = ui.num("move", "x", 150);
+        joyHomeY = ui.num("move", "y", 455);
+        zoneX = ui.num("move", "zoneX", 0);
+        zoneY = ui.num("move", "zoneY", 250);
+        zoneW = ui.num("move", "zoneW", 500);
+        zoneH = ui.num("move", "zoneH", 290);
+        joyColor = ui.str("move", "color", "#ffffff");
+        joyX = joyHomeX; joyY = joyHomeY; knobX = joyHomeX; knobY = joyHomeY;
+        label.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
     }
 
     private static Button fromXml(Map<String, String> b) {
@@ -45,12 +56,14 @@ final class TouchControls {
     private static double num(Map<String, String> b, String key) { return Double.parseDouble(b.get(key)); }
 
     private final Map<Integer, Button> active = new HashMap<>();
+
+    // floating analog stick for movement
+    private final double joyRadius, joyDead, joyHomeX, joyHomeY, zoneX, zoneY, zoneW, zoneH;
+    private final String joyColor;
+    private int joyPointer = -1;
+    private double joyX, joyY, knobX, knobY;
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG), label = new Paint(Paint.ANTI_ALIAS_FLAG);
     private boolean menuLayout;
-
-    TouchControls() {
-        label.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-    }
 
     private List<Button> layout() { return menuLayout ? menu : game; }
 
@@ -59,8 +72,32 @@ final class TouchControls {
         if (menu != menuLayout) {
             menuLayout = menu;
             active.clear();
+            resetStick(in);
             in.releaseAll();
         }
+    }
+
+    private void resetStick(Input in) {
+        joyPointer = -1;
+        in.setAxis(0);
+        joyX = joyHomeX; joyY = joyHomeY; knobX = joyHomeX; knobY = joyHomeY;
+    }
+
+    /** Sets the horizontal axis from the finger position relative to where the stick was pressed. */
+    private void updateStick(double x, double y, Input in) {
+        double dx = x - joyX, dy = y - joyY;
+        double d = Math.sqrt(dx * dx + dy * dy);
+        if (d > joyRadius && d > 0) { dx *= joyRadius / d; dy *= joyRadius / d; }
+        knobX = joyX + dx; knobY = joyY + dy;
+        double v = dx / joyRadius;                       // -1..1
+        double m = Math.abs(v);
+        if (m < joyDead) v = 0;
+        else v = Math.signum(v) * (m - joyDead) / (1 - joyDead); // re-scale so the stick starts at 0 past the dead zone
+        in.setAxis(v);
+    }
+
+    private boolean inStickZone(double x, double y) {
+        return x >= zoneX && x <= zoneX + zoneW && y >= zoneY && y <= zoneY + zoneH;
     }
 
     private Button hit(double x, double y) {
@@ -70,12 +107,20 @@ final class TouchControls {
 
     void down(int pointer, double x, double y, Input in) {
         Button b = hit(x, y);
-        if (b == null) return;
-        active.put(pointer, b);
-        in.press(b.action);
+        if (b != null) {
+            active.put(pointer, b);
+            in.press(b.action);
+            return;
+        }
+        if (!menuLayout && joyPointer == -1 && inStickZone(x, y)) {
+            joyPointer = pointer;
+            joyX = x; joyY = y;
+            updateStick(x, y, in);
+        }
     }
 
     void move(int pointer, double x, double y, Input in) {
+        if (pointer == joyPointer) { updateStick(x, y, in); return; }
         Button old = active.get(pointer);
         if (old == null || old.contains(x, y)) return;
         in.release(old.action);
@@ -85,17 +130,20 @@ final class TouchControls {
     }
 
     void up(int pointer, Input in) {
+        if (pointer == joyPointer) { resetStick(in); return; }
         Button b = active.remove(pointer);
         if (b != null) in.release(b.action);
     }
 
     void cancelAll(Input in) {
         active.clear();
+        resetStick(in);
         in.releaseAll();
     }
 
     /** Draws the translucent buttons, brighter while held. */
     void draw(Canvas c, boolean menu, Input in) {
+        if (!menu) drawStick(c);
         List<Button> buttons = menu ? this.menu : game;
         for (Button b : buttons) {
             boolean on = in.held(b.action);
@@ -111,5 +159,15 @@ final class TouchControls {
 
             c.drawText(b.label, textX, textY, label);
         }
+    }
+
+    private void drawStick(Canvas c) {
+        boolean active = joyPointer != -1;
+        int base = Color.parseColor(joyColor);
+        double bx = active ? joyX : joyHomeX, by = active ? joyY : joyHomeY;
+        fill.setColor(Color.argb(active ? 70 : 35, Color.red(base), Color.green(base), Color.blue(base)));
+        c.drawCircle((float) bx, (float) by, (float) joyRadius, fill);
+        fill.setColor(Color.argb(active ? 190 : 90, Color.red(base), Color.green(base), Color.blue(base)));
+        c.drawCircle((float) (active ? knobX : joyHomeX), (float) (active ? knobY : joyHomeY), (float) (joyRadius * 0.42), fill);
     }
 }

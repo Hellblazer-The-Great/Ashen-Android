@@ -17,7 +17,7 @@
   <text id="deathText" cy="0" size="64" color="#be1919" text="YOU DIED"/>
 
   <!-- ===== Version (keep text equal to appVersionName in gradle.properties) ===== -->
-  <text id="version" x="868" y="530" size="12" color="#7a7a7a" text="v0.2.1"/>
+  <text id="version" x="868" y="530" size="12" color="#7a7a7a" text="v0.3.0"/>
 
   <!-- ===== World labels ===== -->
   <text id="restPrompt" dy="-90" size="16" color="#ffffff" text="REST"/>
@@ -34,11 +34,13 @@
   <text id="menuLeave" text="Leave"/>
   <text id="menuHint" cx="0" y="375" size="12" color="#888888" text="UP / DOWN choose    OK confirm    BACK close"/>
 
+  <!-- ===== Analog movement stick (floating). Pressing inside the zone places the stick under the finger.
+       radius: how far the knob travels. deadzone: fraction of radius ignored. x/y: idle position of the hint ring. ===== -->
+  <joystick id="move" x="150" y="455" radius="80" deadzone="0.12" zoneX="0" zoneY="250" zoneW="500" zoneH="290" color="#ffffff"/>
+
   <!-- ===== Touch buttons. action = input action, label = text shown on the button ===== -->
   <touch>
     <!-- gameplay -->
-    <button group="game" action="left" label="&lt;" x="95" y="455" r="50"/>
-    <button group="game" action="right" label="&gt;" x="205" y="455" r="50"/>
     <button group="game" action="jump" label="JUMP" x="150" y="365" r="44"/>
     <button group="game" action="light" label="LIGHT" x="840" y="455" r="56"/>
     <button group="game" action="heavy" label="HEAVY" x="730" y="455" r="50"/>

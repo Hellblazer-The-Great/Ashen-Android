@@ -3,6 +3,11 @@
 All notable changes to Ashen Prototype (Android). Versions follow `MAJOR.MINOR.PATCH`; `versionCode` in
 `gradle.properties` increases with every release.
 
+## 0.3.0 (versionCode 4)
+- Movement is an analog joystick (floating stick in the bottom-left) instead of the < and > buttons.
+  Walking eases up to speed and eases to a stop, so motion is smoother.
+- Rolling follows the stick direction.
+
 ## 0.2.1 (versionCode 3)
 - Heavy attack and greataxe smash now use the attack1 sheet, whose frames share one ground line; fixes the
   figure jumping above and below its position during the attack.

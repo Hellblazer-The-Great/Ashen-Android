@@ -79,7 +79,7 @@ final class Player extends Actor {
         staminaDelay -= dt;
         if (staminaDelay <= 0 && state != State.ROLL)
             stamina = Math.min(maxStamina, stamina + regen * (state == State.BLOCK ? blockRegen : 1) * dt);
-        int dir = (in.held("right") ? 1 : 0) - (in.held("left") ? 1 : 0);
+        double ax = in.axis();
         switch (state) {
             case STAGGER:
                 stagT -= dt; vx *= 0.9;
@@ -98,7 +98,7 @@ final class Player extends Actor {
                 attackTick(w, in, dt);
                 break;
             default:
-                free(in, dir, dt);
+                free(in, ax, dt);
         }
     }
 
@@ -123,16 +123,23 @@ final class Player extends Actor {
 
     private void begin(AttackDef a) { spend(a.stamina()); startAttack(a); }
 
-    private void free(Input in, int dir, double dt) {
+    /** Acceleration toward the walk speed (px/s^2). Gives a soft start and a soft stop. */
+    static final double ACCEL = 2600;
+    static final double MOVE_DEAD = 0.01;
+
+    private void free(Input in, double ax, double dt) {
         boolean blocking = in.held("block") && onGround;
         blockT = blocking ? blockT + dt : 0;
-        vx = dir * speed * (blocking ? blockSlow : 1);
-        if (dir != 0) facing = dir;
-        state = blocking ? State.BLOCK : dir != 0 ? State.WALK : State.IDLE;
+        double target = ax * speed * (blocking ? blockSlow : 1);
+        double step = ACCEL * dt;
+        vx = vx < target ? Math.min(target, vx + step) : Math.max(target, vx - step);
+        boolean moving = Math.abs(ax) > MOVE_DEAD;
+        if (moving) facing = ax > 0 ? 1 : -1;
+        state = blocking ? State.BLOCK : moving ? State.WALK : State.IDLE;
         if (in.pressed("switchWeapon")) wi = (wi + 1) % weapons.size();
         if (in.pressed("jump") && onGround && !blocking) { vy = -jumpV; onGround = false; }
         if (in.pressed("roll") && onGround && stamina > 0) {
-            spend(rollCost); rollDir = dir != 0 ? dir : facing; facing = (int) rollDir; state = State.ROLL; t = 0; blockT = 0; return;
+            spend(rollCost); rollDir = moving ? (ax > 0 ? 1 : -1) : facing; facing = (int) rollDir; state = State.ROLL; t = 0; blockT = 0; return;
         }
         if (in.pressed("light") && stamina > 0) { combo = 0; begin(weapon().light().get(0)); return; }
         if (in.pressed("heavy") && stamina > 0) { begin(weapon().heavy()); return; }

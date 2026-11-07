@@ -28,7 +28,12 @@ final class Input {
         else refs.put(a, c - 1);
     }
 
-    void releaseAll() { refs.clear(); down.clear(); }
+    void releaseAll() { refs.clear(); down.clear(); axis = 0; }
+
+    /** Analog horizontal movement from the joystick, -1 (full left) .. 1 (full right), after dead zone. */
+    private double axis;
+    void setAxis(double a) { axis = Math.max(-1, Math.min(1, a)); }
+    double axis() { return axis; }
 
     boolean held(String a) { return forced.contains(a) || down.contains(a); }
 

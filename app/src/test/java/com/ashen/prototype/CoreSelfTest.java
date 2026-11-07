@@ -25,7 +25,7 @@ public class CoreSelfTest {
         Input in = new Input();
         double dt = 1 / 60.0;
         for (int f = 0; f < 60 * 120; f++) {
-            in.hold("right", f % 600 < 500);
+            in.setAxis(f % 600 < 500 ? 1 : 0);
             if (f % 40 == 0) in.tap("light");
             if (f % 170 == 0) in.tap("roll");
             if (f % 250 == 0) in.tap("heavy");
@@ -60,11 +60,12 @@ public class CoreSelfTest {
     @Test
     public void uiFileProvidesTouchLayout() throws Exception {
         Ui ui = loadData().ui;
-        assertEquals(11, ui.buttons("game").size());
+        assertEquals(9, ui.buttons("game").size());
+        assertTrue(ui.num("move", "radius", 0) > 0);
         assertEquals(4, ui.buttons("menu").size());
-        assertEquals("LIGHT", ui.buttons("game").get(3).get("label"));
+        assertEquals("LIGHT", ui.buttons("game").get(1).get("label"));
         assertEquals(20, ui.num("health", "x", -1), 0.001);
-        assertEquals("v0.2.1", ui.str("version", "text", ""));
+        assertEquals("v0.3.0", ui.str("version", "text", ""));
     }
 
     @Test
