@@ -1,0 +1,3 @@
+{
+  "flask": { "name": "Estus Flask", "charges": 3, "heal": 55, "duration": 0.9 }
+}

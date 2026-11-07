@@ -1,0 +1,19 @@
+{
+  "title": "ASHEN PROTOTYPE",
+  "useTextures": true,
+  "screen": { "w": 960, "h": 540 },
+  "physics": { "gravity": 1500, "maxFall": 900 },
+  "respawnDelay": 3.5,
+  "combat": {
+    "backstabMult": 2.5,
+    "riposteMult": 3.0,
+    "parryStagger": 1.2,
+    "guardBreakStagger": 0.9,
+    "playerHitStun": 0.3,
+    "blockStaminaPerDamage": 1.2,
+    "blockChipRatio": 0.0,
+    "knockback": 140,
+    "poiseDecay": 14
+  },
+  "levelUp": { "costBase": 100, "costGrowth": 45 }
+}

@@ -1,0 +1,145 @@
+{
+  "width": 3600,
+  "groundY": 460,
+  "playerStart": 120,
+  "skyColor": "#14161c",
+  "groundColor": "#2a2c33",
+  "platformColor": "#3b3e48",
+  "platforms": [
+    {
+      "x": 520,
+      "y": 380,
+      "w": 160
+    },
+    {
+      "x": 1240,
+      "y": 370,
+      "w": 200
+    },
+    {
+      "x": 2000,
+      "y": 385,
+      "w": 180
+    }
+  ],
+  "scenery": [
+    {
+      "x": 300,
+      "texture": "environment/dead_tree.png",
+      "scale": 5
+    },
+    {
+      "x": 900,
+      "texture": "environment/pine_tree.png",
+      "scale": 5
+    },
+    {
+      "x": 1700,
+      "texture": "environment/dead_tree.png",
+      "scale": 5
+    },
+    {
+      "x": 2500,
+      "texture": "environment/pine_tree.png",
+      "scale": 5
+    },
+    {
+      "x": 3300,
+      "texture": "environment/dead_tree.png",
+      "scale": 5
+    }
+  ],
+  "bonfires": [
+    {
+      "id": "gate",
+      "name": "Ruined Gate",
+      "x": 200
+    },
+    {
+      "id": "crypt",
+      "name": "Hollow Crypt",
+      "x": 1900
+    }
+  ],
+  "spawns": [
+    {
+      "enemy": "hollow",
+      "x": 700
+    },
+    {
+      "enemy": "hollow",
+      "x": 1000
+    },
+    {
+      "enemy": "hollow",
+      "x": 1400
+    },
+    {
+      "enemy": "brute",
+      "x": 1650
+    },
+    {
+      "enemy": "hollow",
+      "x": 2300
+    },
+    {
+      "enemy": "brute",
+      "x": 2600
+    },
+    {
+      "enemy": "warden",
+      "x": 3300
+    }
+  ],
+  "gate": {
+    "x": 3000,
+    "boss": "warden"
+  },
+  "visuals": {
+    "backgrounds": [
+      {
+        "texture": "environment/bg_1.png",
+        "factor": 0,
+        "scale": 5
+      },
+      {
+        "texture": "environment/bg_4.png",
+        "factor": 0.02,
+        "scale": 5
+      },
+      {
+        "texture": "environment/bg_2.png",
+        "factor": 0.1,
+        "scale": 5
+      },
+      {
+        "texture": "environment/bg_3.png",
+        "factor": 0.25,
+        "scale": 5
+      },
+      {
+        "texture": "environment/bg_5.png",
+        "factor": 0.45,
+        "scale": 5
+      }
+    ],
+    "ground": {
+      "top": "environment/grass_t.png",
+      "fill": "environment/stone_m.png",
+      "scale": 3
+    },
+    "platform": {
+      "texture": "environment/wood_platform_m.png",
+      "scale": 3
+    },
+    "bonfire": {
+      "off": "environment/checkpoint_off.png",
+      "on": "environment/checkpoint_on.png",
+      "scale": 4
+    },
+    "gate": {
+      "texture": "environment/door_closed.png",
+      "scale": 5
+    }
+  }
+}
