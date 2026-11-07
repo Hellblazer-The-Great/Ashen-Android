@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
-import java.io.IOException;
 
 public final class MainActivity extends Activity {
     private GameView view;
@@ -13,14 +12,14 @@ public final class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         try {
-            Data data = new Data(name -> Assets.readAsset(getAssets(), "data/" + name));
+            Data data = new Data(name -> Assets.readAsset(getAssets(), name));
             Assets assets = new Assets(getAssets());
             assets.enabled = Json.getBool(data.game, "useTextures", true);
             World world = new World(data);
-            view = new GameView(this, world, assets);
+            view = new GameView(this, world, assets, data.ui);
             setContentView(view);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not load game data from assets/data", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not load game content from assets", e);
         }
     }
 

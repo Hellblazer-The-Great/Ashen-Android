@@ -11,12 +11,14 @@ import java.util.Map;
 import static com.ashen.prototype.Json.*;
 
 /**
- * Draws the World onto a Canvas. Port of the desktop GamePanel: same draw order, same
- * data-driven visuals, same HUD. Logical space is screen.w x screen.h (960x540) and the view scales it.
+ * Draws the World onto a Canvas. Port of the desktop GamePanel. Every HUD position, size, colour and label
+ * comes from assets/ui/ui.xml (via Ui); every level element comes from the Tiled map (via TmxLoader).
+ * Logical space is screen.w x screen.h (960x540) and the view scales it.
  */
 final class Renderer {
     private final World w;
     private final Assets assets;
+    private final Ui ui;
     private final Map<String, Object> vis;
     private final int W, H;
     private final Map<String, Integer> colors = new HashMap<>();
@@ -25,9 +27,10 @@ final class Renderer {
     boolean debug;
     double dt = 1 / 60.0;
 
-    Renderer(World w, Assets assets) {
+    Renderer(World w, Assets assets, Ui ui) {
         this.w = w;
         this.assets = assets;
+        this.ui = ui;
         vis = obj(w.d.level.get("visuals"));
         W = (int) w.screenW; H = (int) w.screenH;
         fillPaint.setStyle(Paint.Style.FILL);
@@ -45,6 +48,9 @@ final class Renderer {
         }
         return c;
     }
+
+    /** Colour of a UI element attribute, e.g. ui colour("health") -> #be2323. */
+    private int uiColor(String id, String attr, String def) { return col(ui.str(id, attr, def)); }
 
     // ------------------------------------------------------------------ primitives
     private void rect(Canvas c, int color, double x, double y, double rw, double rh) {
@@ -78,9 +84,9 @@ final class Renderer {
         c.drawText(s, tx, (float) y, textPaint);
     }
 
-    private void bar(Canvas c, int x, int y, int bw, int bh, double frac, int color) {
+    private void bar(Canvas c, double x, double y, double bw, double bh, double frac, int color) {
         rect(c, Color.argb(170, 0, 0, 0), x - 2, y - 2, bw + 4, bh + 4);
-        rect(c, color, x, y, (int) (bw * Math.max(0, Math.min(1, frac))), bh);
+        rect(c, color, x, y, bw * Math.max(0, Math.min(1, frac)), bh);
     }
 
     // ------------------------------------------------------------------ frame
@@ -100,9 +106,9 @@ final class Renderer {
             Map<String, Object> m = obj(o);
             Bitmap b = assets.get(getStr(m, "texture", ""));
             if (b == null) continue;
-            int sc = (int) getNum(m, "scale", 5), iw = b.getWidth() * sc, ih = b.getHeight() * sc;
-            int off = -((int) (w.camX * getNum(m, "factor", 0))) % iw;
-            for (int x = off - iw; x < W + iw; x += iw) image(c, b, x, H - ih, iw, ih, false, 255);
+            double iw = getNum(m, "w", W), ih = getNum(m, "h", H), by = getNum(m, "y", H - ih);
+            int off = -((int) (w.camX * getNum(m, "factor", 0))) % (int) iw;
+            for (double x = off - iw; x < W + iw; x += iw) image(c, b, x, by, iw, ih, false, 255);
         }
     }
 
@@ -115,17 +121,13 @@ final class Renderer {
     private void drawWorld(Canvas c) {
         int gy = (int) w.groundY, camL = (int) w.camX - 64, camR = (int) w.camX + W + 64;
 
-        // scenery
+        // scenery: boxes from the map (top-left corner and size)
         for (Object o : arr(w.d.level.get("scenery"))) {
             Map<String, Object> m = obj(o);
             Bitmap b = assets.get(getStr(m, "texture", ""));
-            int x = (int) getNum(m, "x", 0);
-            if (b != null) {
-                int sc = (int) getNum(m, "scale", 4);
-                image(c, b, x, gy - b.getHeight() * sc, b.getWidth() * sc, b.getHeight() * sc, false, 255);
-            } else {
-                rect(c, col(getStr(m, "color", "#1b1e26")), x, gy - (int) getNum(m, "h", 200), (int) getNum(m, "w", 50), (int) getNum(m, "h", 200));
-            }
+            double x = getNum(m, "x", 0), y = getNum(m, "y", 0), sw = getNum(m, "w", 50), sh = getNum(m, "h", 200);
+            if (b != null) image(c, b, x, y, sw, sh, false, 255);
+            else rect(c, col("#1b1e26"), x, y, sw, sh);
         }
 
         // ground
@@ -157,33 +159,44 @@ final class Renderer {
             int sc = (int) getNum(bf, "scale", 4);
             if (img != null) image(c, img, (int) b.x - img.getWidth() * sc / 2, gy - img.getHeight() * sc, img.getWidth() * sc, img.getHeight() * sc, false, 255);
             else rect(c, lit ? col("#ffb040") : col("#6a4a30"), (int) b.x - 12, gy - 30, 24, 30);
-            if (w.nearBonfire() == b && w.player.alive()) text(c, "REST", (int) b.x, gy - 90, 16, Color.WHITE, true);
+            if (w.nearBonfire() == b && w.player.alive())
+                text(c, ui.str("restPrompt", "text", "REST"), (int) b.x, gy + ui.num("restPrompt", "dy", -90), (int) ui.num("restPrompt", "size", 16),
+                        uiColor("restPrompt", "color", "#ffffff"), true);
         }
 
-        // boss gate
-        Map<String, Object> gt = obj(vis.get("gate"));
+        // boss gate (a map object; faded while the gate is open)
+        Map<String, Object> gt = obj(w.d.level.get("gate"));
         if (w.gateX < 1e8) {
             Bitmap img = assets.get(getStr(gt, "texture", ""));
-            int sc = (int) getNum(gt, "scale", 5);
             double ga = w.gateLocked ? 1.0 : 0.35;   // closed gate is fully opaque, open gate is faded
             int alpha = (int) (255 * ga);
-            if (img != null) image(c, img, (int) w.gateX - img.getWidth() * sc / 2, gy - img.getHeight() * sc, img.getWidth() * sc, img.getHeight() * sc, false, alpha);
-            else rect(c, Color.argb(alpha, 255, 255, 255), (int) w.gateX - 8, gy - 200, 16, 200);
-            rect(c, Color.argb((int) ((w.gateLocked ? 90 : 25) * ga), 230, 230, 255), (int) w.gateX - 10, gy - 160, 20, 160);
+            double gw = getNum(gt, "w", 16), gh = getNum(gt, "h", 200), gx = w.gateX - gw / 2, gyTop = getNum(gt, "y", gy - gh);
+            if (img != null) image(c, img, gx, gyTop, gw, gh, false, alpha);
+            else rect(c, Color.argb(alpha, 255, 255, 255), gx, gyTop, gw, gh);
+            rect(c, Color.argb((int) ((w.gateLocked ? 90 : 25) * ga), 230, 230, 255), w.gateX - 10, gy - 160, 20, 160);
         }
 
         // bloodstain
         if (w.stain != null) {
-            fillPaint.setColor(Color.argb(200, 120, 220, 255));
-            c.drawOval(new RectF((float) w.stain.x - 10, (float) w.stain.y - 20, (float) w.stain.x + 10, (float) w.stain.y), fillPaint);
-            text(c, "" + w.stain.souls, (int) w.stain.x, (int) w.stain.y - 28, 12, Color.rgb(160, 230, 255), true);
+            fillPaint.setColor(Color.argb((int) ui.num("stain", "alpha", 200), 120, 220, 255));
+            double sw = ui.num("stain", "width", 20), sh = ui.num("stain", "height", 20);
+            double sdy = ui.num("stain", "dy", -20);
+            c.drawOval(new RectF((float) (w.stain.x - sw / 2), (float) (w.stain.y + sdy), (float) (w.stain.x + sw / 2), (float) (w.stain.y + sdy + sh)), fillPaint);
+            text(c, "" + w.stain.souls, (int) w.stain.x, (int) (w.stain.y + ui.num("stainValue", "dy", -28)),
+                    (int) ui.num("stainValue", "size", 12), uiColor("stainValue", "color", "#a0e6ff"), true);
         }
 
         // actors
         for (Enemy e : w.enemies) if (e.alive() && e.active) {
             drawActor(c, e, assets.sprite(e.def.sprite()), col(e.color));
-            if (e.hp < e.maxHp && !e.def.boss()) bar(c, (int) e.cx() - 20, (int) e.y - 10, 40, 4, e.hp / e.maxHp, Color.argb(255, 190, 40, 40));
-            if (e.state == Actor.State.ATTACK && e.atkPhase() == 0) text(c, "!", (int) e.cx(), (int) e.y - 14, 22, Color.rgb(255, 220, 60), true);
+            if (e.hp < e.maxHp && !e.def.boss()) {
+                bar(c, e.cx() + ui.num("enemyBar", "dx", -20), e.y + ui.num("enemyBar", "dy", -10),
+                        ui.num("enemyBar", "width", 40), ui.num("enemyBar", "height", 4), e.hp / e.maxHp,
+                        uiColor("enemyBar", "color", "#be2828"));
+            }
+            if (e.state == Actor.State.ATTACK && e.atkPhase() == 0)
+                text(c, ui.str("alert", "text", "!"), e.cx(), e.y + ui.num("alert", "dy", -14), (int) ui.num("alert", "size", 22),
+                        uiColor("alert", "color", "#ffdc3c"), true);
         }
         drawActor(c, w.player, assets.sprite(obj(w.d.player.get("sprite"))), col(getStr(w.d.player, "color", "#4fa3ff")));
     }
@@ -203,6 +216,28 @@ final class Renderer {
         }
     }
 
+    /**
+     * Frame for an attack. If the animation has per-phase frames (windup / active / recovery), the strike frame
+     * is shown during the active window; otherwise the frames are spread across the whole attack.
+     */
+    private Bitmap attackFrame(Assets.Anim an, Actor a) {
+        int ph = a.atkPhase();
+        if (an.phases != null && ph >= 0 && ph <= 2) {
+            String key = ph == 0 ? "windup" : ph == 1 ? "active" : "recovery";
+            Bitmap[] fr = an.phases.get(key);
+            if (fr != null && fr.length > 0) {
+                double start = ph == 0 ? 0 : ph == 1 ? a.atk.windup() : a.atk.windup() + a.atk.active();
+                double dur = ph == 0 ? a.atk.windup() : ph == 1 ? a.atk.active() : a.atk.recovery();
+                double p = dur > 0 ? (a.atkT - start) / dur : 0;
+                p = Math.max(0, Math.min(0.999, p));
+                return fr[(int) (p * fr.length)];
+            }
+        }
+        double total = a.atk.windup() + a.atk.active() + a.atk.recovery();
+        int idx = Math.min(an.frames.length - 1, (int) (a.atkT / total * an.frames.length));
+        return an.frames[idx];
+    }
+
     private void drawActor(Canvas c, Actor a, Assets.Sprite sp, int fallback) {
         String want = animFor(a);
         if (!want.equals(a.animName)) { a.animName = want; a.animT = 0; } else a.animT += dt;
@@ -215,15 +250,14 @@ final class Renderer {
                 rect(c, Color.argb(140, 255, 255, 255), hb.x, hb.y, hb.w, hb.h);
             }
         } else {
-            int n = an.frames.length, idx;
+            Bitmap bi;
             if (want.startsWith("attack") && a.atk != null) {
-                double total = a.atk.windup() + a.atk.active() + a.atk.recovery();
-                idx = Math.min(n - 1, (int) (a.atkT / total * n));
+                bi = attackFrame(an, a);
             } else {
                 int f = (int) (a.animT * an.fps);
-                idx = an.loop ? f % n : Math.min(n - 1, f);
+                int n = an.frames.length;
+                bi = an.frames[an.loop ? f % n : Math.min(n - 1, f)];
             }
-            Bitmap bi = an.frames[idx];
             double s = sp.scale;
             boolean flip = (a.facing > 0) != sp.facesRight;
             c.save();
@@ -254,38 +288,59 @@ final class Renderer {
     // ------------------------------------------------------------------ HUD
     private void drawHud(Canvas c) {
         Player p = w.player;
-        bar(c, 20, 20, (int) (p.maxHp * 2.2), 14, p.hp / p.maxHp, Color.argb(255, 190, 35, 35));
-        bar(c, 20, 40, (int) (p.maxStamina * 2.2), 9, p.stamina / p.maxStamina, Color.argb(255, 70, 170, 70));
-        text(c, p.weapon().name() + "   Flasks: " + p.flasks + "/" + p.maxFlasks + "   Lv " + p.level(), 20, 70, 14, Color.WHITE, false);
-        text(c, "Souls: " + p.souls, 20, 92, 18, Color.rgb(160, 230, 255), false);
+        double hs = ui.num("health", "scale", 2.2), ss = ui.num("stamina", "scale", 2.2);
+        bar(c, ui.x("health", W, 20), ui.y("health", H, 20), p.maxHp * hs, ui.num("health", "height", 14), p.hp / p.maxHp,
+                uiColor("health", "color", "#be2323"));
+        bar(c, ui.x("stamina", W, 20), ui.y("stamina", H, 40), p.maxStamina * ss, ui.num("stamina", "height", 9), p.stamina / p.maxStamina,
+                uiColor("stamina", "color", "#46aa46"));
+        text(c, p.weapon().name() + "   Flasks: " + p.flasks + "/" + p.maxFlasks + "   Lv " + p.level(),
+                ui.x("weapon", W, 20), ui.y("weapon", H, 70), (int) ui.num("weapon", "size", 14), uiColor("weapon", "color", "#ffffff"), false);
+        text(c, "Souls: " + p.souls, ui.x("souls", W, 20), ui.y("souls", H, 92), (int) ui.num("souls", "size", 18),
+                uiColor("souls", "color", "#a0e6ff"), false);
 
         Enemy boss = w.bossEnemy();
         if (boss != null && w.gateLocked && boss.alive()) {
-            bar(c, W / 2 - 250, 20, 500, 12, boss.hp / boss.maxHp, Color.argb(255, 160, 30, 30));
-            text(c, boss.def.name(), W / 2, 50, 16, Color.WHITE, true);
+            bar(c, ui.x("bossBar", W, W / 2 - 250), ui.y("bossBar", H, 20), ui.num("bossBar", "width", 500), ui.num("bossBar", "height", 12),
+                    boss.hp / boss.maxHp, uiColor("bossBar", "color", "#a01e1e"));
+            text(c, boss.def.name(), ui.x("bossName", W, W / 2), ui.y("bossName", H, 50), (int) ui.num("bossName", "size", 16),
+                    uiColor("bossName", "color", "#ffffff"), true);
         }
-        if (w.bannerT > 0 && !w.banner.isEmpty()) text(c, w.banner, W / 2, H / 2 - 40, p.alive() ? 30 : 56, col(w.bannerColor), true);
+        if (w.bannerT > 0 && !w.banner.isEmpty()) {
+            text(c, w.banner, W / 2, ui.y("banner", H, H / 2 - 40), (int) ui.num("banner", p.alive() ? "size" : "deadSize", p.alive() ? 30 : 56),
+                    col(w.bannerColor), true);
+        }
         if (!p.alive()) {
-            rect(c, Color.argb((int) Math.min(170, w.deathT * 90), 0, 0, 0), 0, 0, W, H);
-            text(c, "YOU DIED", W / 2, H / 2, 64, Color.rgb(190, 25, 25), true);
+            int a = (int) Math.min(ui.num("deathFade", "maxAlpha", 170), w.deathT * ui.num("deathFade", "rate", 90));
+            rect(c, Color.argb(a, 0, 0, 0), 0, 0, W, H);
+            text(c, ui.str("deathText", "text", "YOU DIED"), ui.x("deathText", W, W / 2), ui.y("deathText", H, H / 2), (int) ui.num("deathText", "size", 64),
+                    uiColor("deathText", "color", "#be1919"), true);
         }
+        text(c, ui.str("version", "text", ""), ui.x("version", W, 868), ui.y("version", H, 530), (int) ui.num("version", "size", 12),
+                uiColor("version", "color", "#7a7a7a"), false);
         if (w.menu) drawMenu(c);
     }
 
     private void drawMenu(Canvas c) {
         Player p = w.player;
-        rect(c, Color.argb(200, 0, 0, 0), W / 2 - 220, 90, 440, 300);
-        text(c, "BONFIRE - Level Up", W / 2, 130, 24, Color.rgb(255, 180, 64), true);
-        text(c, "Souls: " + p.souls + "    Cost: " + p.levelCost() + "    Level: " + p.level(), W / 2, 160, 14, Color.WHITE, true);
-        int y = 200;
-        for (int i = 0; i < w.statKeys.size(); i++, y += 36) {
+        double px = ui.x("menuPanel", W, W / 2 - 220), py = ui.y("menuPanel", H, 90);
+        rect(c, Color.argb((int) ui.num("menuPanel", "alpha", 200), 0, 0, 0), px, py,
+                ui.num("menuPanel", "width", 440), ui.num("menuPanel", "height", 300));
+        text(c, ui.str("menuTitle", "text", "BONFIRE - Level Up"), ui.x("menuTitle", W, W / 2), ui.y("menuTitle", H, 130),
+                (int) ui.num("menuTitle", "size", 24), uiColor("menuTitle", "color", "#ffb440"), true);
+        text(c, "Souls: " + p.souls + "    Cost: " + p.levelCost() + "    Level: " + p.level(),
+                ui.x("menuInfo", W, W / 2), ui.y("menuInfo", H, 160), (int) ui.num("menuInfo", "size", 14), uiColor("menuInfo", "color", "#ffffff"), true);
+
+        double rx = ui.x("menuRows", W, W / 2 - 120), ry = ui.y("menuRows", H, 200), step = ui.num("menuRows", "step", 36);
+        int rsize = (int) ui.num("menuRows", "size", 20);
+        int normal = uiColor("menuRows", "color", "#d3d3d3"), sel = uiColor("menuRows", "selected", "#ffff00");
+        for (int i = 0; i < w.statKeys.size(); i++) {
             String k = w.statKeys.get(i);
             String label = getStr(obj(obj(w.d.player.get("stats")).get(k)), "label", k);
-            text(c, (w.menuSel == i ? "> " : "  ") + label + "   " + p.pts.get(k), W / 2 - 120, y, 20,
-                    w.menuSel == i ? Color.YELLOW : Color.LTGRAY, false);
+            text(c, (w.menuSel == i ? "> " : "  ") + label + "   " + p.pts.get(k), rx, ry + i * step, rsize, w.menuSel == i ? sel : normal, false);
         }
-        text(c, (w.menuSel == w.statKeys.size() ? "> " : "  ") + "Leave", W / 2 - 120, y, 20,
-                w.menuSel == w.statKeys.size() ? Color.YELLOW : Color.LTGRAY, false);
-        text(c, "UP / DOWN choose    OK confirm    BACK close", W / 2, 375, 12, Color.GRAY, true);
+        int i = w.statKeys.size();
+        text(c, (w.menuSel == i ? "> " : "  ") + ui.str("menuLeave", "text", "Leave"), rx, ry + i * step, rsize, w.menuSel == i ? sel : normal, false);
+        text(c, ui.str("menuHint", "text", ""), ui.x("menuHint", W, W / 2), ui.y("menuHint", H, 375), (int) ui.num("menuHint", "size", 12),
+                uiColor("menuHint", "color", "#888888"), true);
     }
 }

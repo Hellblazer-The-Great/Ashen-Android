@@ -108,16 +108,19 @@ final class Data {
     }
 
     final Map<String, Object> game, player, items, level;
+    final Ui ui;
     final Map<String, WeaponDef> weapons = new LinkedHashMap<>();
     final Map<String, EnemyDef> enemies = new LinkedHashMap<>();
 
-    Data(Source src) throws IOException {
-        game = read(src, "game.json");
-        player = read(src, "player.json");
-        items = read(src, "items.json");
-        level = read(src, "level.json");
+    /** Source names are relative to the assets root, e.g. "data/game.json", "maps/level1.tmx", "ui/ui.xml". */
+    Data(Source src) throws Exception {
+        game = read(src, "data/game.json");
+        player = read(src, "data/player.json");
+        items = read(src, "data/items.json");
+        level = TmxLoader.load(src, "maps/level1.tmx");
+        ui = Ui.parse(src.read("ui/ui.xml"));
 
-        for (Map.Entry<String, Object> e : read(src, "weapons.json").entrySet()) {
+        for (Map.Entry<String, Object> e : read(src, "data/weapons.json").entrySet()) {
             Map<String, Object> m = obj(e.getValue());
             List<AttackDef> light = new ArrayList<>();
             for (Object o : arr(m.get("light"))) light.add(AttackDef.of(obj(o)));
@@ -125,7 +128,7 @@ final class Data {
                     getNum(m, "stability", 1), getNum(m, "parryWindow", 0.15), getStr(m, "color", "#cccccc"),
                     getStr(m, "texture", ""), light, AttackDef.of(obj(m.get("heavy")))));
         }
-        for (Map.Entry<String, Object> e : read(src, "enemies.json").entrySet()) {
+        for (Map.Entry<String, Object> e : read(src, "data/enemies.json").entrySet()) {
             Map<String, Object> m = obj(e.getValue());
             List<AttackDef> atks = new ArrayList<>();
             for (Object o : arr(m.get("attacks"))) atks.add(AttackDef.of(obj(o)));

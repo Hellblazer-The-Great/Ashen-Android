@@ -10,8 +10,8 @@ android {
         applicationId 'com.ashen.prototype'
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName '1.0'
+        versionCode project.appVersionCode.toInteger()
+        versionName project.appVersionName
     }
 
     // The game is written in plain Java 8 syntax (no records, pattern matching or switch arrows).

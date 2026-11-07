@@ -22,6 +22,8 @@ final class Assets {
 
     static final class Anim {
         Bitmap[] frames;
+        /** Optional per-attack-phase frames ("windup", "active", "recovery") so strikes land on the hit. */
+        Map<String, Bitmap[]> phases;
         double fps, cx, feet, spinTime;
         boolean loop;
     }
@@ -79,20 +81,44 @@ final class Assets {
             if (sheet == null) continue;
             int fw = (int) getNum(m, "fw", sheet.getWidth()), fh = (int) getNum(m, "fh", sheet.getHeight());
             int cols = sheet.getWidth() / fw, total = cols * (sheet.getHeight() / fh);
-            int from = (int) getNum(m, "from", 0), to = Math.min((int) getNum(m, "to", total - 1), total - 1);
             List<Bitmap> fr = new ArrayList<>();
-            for (int i = from; i <= to; i++) {
-                Bitmap sub = Bitmap.createBitmap(sheet, (i % cols) * fw, (i / cols) * fh, fw, fh);
-                if (!blank(sub)) fr.add(sub);
+            if (m.get("frames") instanceof List) {
+                // explicit list of cell indices, kept as written (even if a cell looks empty)
+                for (Object o : arr(m.get("frames"))) {
+                    int i = (int) ((Number) o).doubleValue();
+                    if (i >= 0 && i < total) fr.add(cell(sheet, i, cols, fw, fh));
+                }
+            } else {
+                int from = (int) getNum(m, "from", 0), to = Math.min((int) getNum(m, "to", total - 1), total - 1);
+                for (int i = from; i <= to; i++) {
+                    Bitmap sub = cell(sheet, i, cols, fw, fh);
+                    if (!blank(sub)) fr.add(sub);
+                }
             }
             if (fr.isEmpty()) continue;
             Anim a = new Anim();
             a.frames = fr.toArray(new Bitmap[0]);
+            Map<String, Object> phases = obj(m.get("phases"));
+            if (!phases.isEmpty()) {
+                a.phases = new HashMap<>();
+                for (Map.Entry<String, Object> ph : phases.entrySet()) {
+                    List<Bitmap> pf = new ArrayList<>();
+                    for (Object o : arr(ph.getValue())) {
+                        int i = (int) ((Number) o).doubleValue();
+                        if (i >= 0 && i < total) pf.add(cell(sheet, i, cols, fw, fh));
+                    }
+                    a.phases.put(ph.getKey(), pf.toArray(new Bitmap[0]));
+                }
+            }
             a.fps = getNum(m, "fps", 8); a.loop = getBool(m, "loop", true); a.spinTime = getNum(m, "spinTime", 0);
             a.cx = getNum(m, "cx", dcx); a.feet = getNum(m, "feet", dfeet);
             s.anims.put(e.getKey(), a);
         }
         return s.anims.isEmpty() ? null : s;
+    }
+
+    private static Bitmap cell(Bitmap sheet, int i, int cols, int fw, int fh) {
+        return Bitmap.createBitmap(sheet, (i % cols) * fw, (i / cols) * fh, fw, fh);
     }
 
     private static boolean blank(Bitmap b) {
@@ -103,7 +129,7 @@ final class Assets {
         return true;
     }
 
-    /** Reads a bundled text file such as "data/game.json". */
+    /** Reads a bundled text file by its path under assets/, e.g. "data/game.json". */
     static String readAsset(AssetManager am, String path) throws IOException {
         try (InputStream in = am.open(path)) {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();

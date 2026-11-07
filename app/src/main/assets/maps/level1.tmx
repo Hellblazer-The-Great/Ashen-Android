@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="113" height="17" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="25">
+<properties>
+ <property name="levelWidth" type="float" value="3600"/>
+ <property name="groundY" type="float" value="460"/>
+ <property name="playerStart" type="float" value="120"/>
+ <property name="skyColor" value="#14161c"/>
+ <property name="groundColor" value="#2a2c33"/>
+ <property name="platformColor" value="#3b3e48"/>
+ <property name="groundTop" value="environment/grass_t.png"/>
+ <property name="groundFill" value="environment/stone_m.png"/>
+ <property name="groundScale" type="float" value="3"/>
+ <property name="platformTexture" value="environment/wood_platform_m.png"/>
+ <property name="platformScale" type="float" value="3"/>
+ <property name="bonfireOff" value="environment/checkpoint_off.png"/>
+ <property name="bonfireOn" value="environment/checkpoint_on.png"/>
+ <property name="bonfireScale" type="float" value="4"/>
+ </properties>
+ <tileset firstgid="1" source="art.tsx"/>
+ <objectgroup id="1" name="backgrounds">
+  <object id="1" name="bg_1" gid="1" x="0" y="540" width="960" height="540">
+   <properties>
+    <property name="factor" type="float" value="0"/>
+    </properties>
+  </object>
+  <object id="2" name="bg_4" gid="4" x="0" y="540" width="960" height="540">
+   <properties>
+    <property name="factor" type="float" value="0.02"/>
+    </properties>
+  </object>
+  <object id="3" name="bg_2" gid="2" x="0" y="540" width="960" height="540">
+   <properties>
+    <property name="factor" type="float" value="0.1"/>
+    </properties>
+  </object>
+  <object id="4" name="bg_3" gid="3" x="0" y="540" width="960" height="540">
+   <properties>
+    <property name="factor" type="float" value="0.25"/>
+    </properties>
+  </object>
+  <object id="5" name="bg_5" gid="5" x="0" y="540" width="960" height="540">
+   <properties>
+    <property name="factor" type="float" value="0.45"/>
+    </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="2" name="scenery">
+  <object id="6" name="dead_tree" gid="8" x="300" y="460" width="80" height="80"/>
+  <object id="7" name="pine_tree" gid="11" x="900" y="460" width="160" height="240"/>
+  <object id="8" name="dead_tree" gid="8" x="1700" y="460" width="80" height="80"/>
+  <object id="9" name="pine_tree" gid="11" x="2500" y="460" width="160" height="240"/>
+  <object id="10" name="dead_tree" gid="8" x="3300" y="460" width="80" height="80"/>
+ </objectgroup>
+ <objectgroup id="3" name="platforms">
+  <object id="11" name="platform" x="520" y="380" width="160" height="12"/>
+  <object id="12" name="platform" x="1240" y="370" width="200" height="12"/>
+  <object id="13" name="platform" x="2000" y="385" width="180" height="12"/>
+ </objectgroup>
+ <objectgroup id="4" name="bonfires">
+  <object id="14" name="gate" x="200" y="460">
+   <properties>
+    <property name="label" value="Ruined Gate"/>
+    </properties>
+  </object>
+  <object id="15" name="crypt" x="1900" y="460">
+   <properties>
+    <property name="label" value="Hollow Crypt"/>
+    </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="5" name="enemies">
+  <object id="16" name="hollow" x="700" y="460">
+   <properties>
+    <property name="enemy" value="hollow"/>
+    </properties>
+  </object>
+  <object id="17" name="hollow" x="1000" y="460">
+   <properties>
+    <property name="enemy" value="hollow"/>
+    </properties>
+  </object>
+  <object id="18" name="hollow" x="1400" y="460">
+   <properties>
+    <property name="enemy" value="hollow"/>
+    </properties>
+  </object>
+  <object id="19" name="brute" x="1650" y="460">
+   <properties>
+    <property name="enemy" value="brute"/>
+    </properties>
+  </object>
+  <object id="20" name="hollow" x="2300" y="460">
+   <properties>
+    <property name="enemy" value="hollow"/>
+    </properties>
+  </object>
+  <object id="21" name="brute" x="2600" y="460">
+   <properties>
+    <property name="enemy" value="brute"/>
+    </properties>
+  </object>
+  <object id="22" name="warden" x="3300" y="460">
+   <properties>
+    <property name="enemy" value="warden"/>
+    </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="6" name="gate">
+  <object id="23" name="gate" gid="9" x="2920" y="460" width="160" height="160">
+   <properties>
+    <property name="boss" value="warden"/>
+    </properties>
+  </object>
+ </objectgroup>
+</map>

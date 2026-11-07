@@ -29,30 +29,20 @@ final class TouchControls {
         }
     }
 
-    private static final List<Button> GAME = new ArrayList<>();
-    private static final List<Button> MENU = new ArrayList<>();
-    static {
-        // movement, bottom-left
-        GAME.add(new Button("left", "<", 95, 455, 50));
-        GAME.add(new Button("right", ">", 205, 455, 50));
-        GAME.add(new Button("jump", "JUMP", 150, 365, 44));
-        // combat, bottom-right
-        GAME.add(new Button("light", "LIGHT", 840, 455, 56));
-        GAME.add(new Button("heavy", "HEAVY", 730, 455, 50));
-        GAME.add(new Button("block", "BLOCK", 840, 345, 48));
-        GAME.add(new Button("roll", "ROLL", 730, 345, 46));
-        GAME.add(new Button("flask", "FLASK", 620, 455, 44));
-        GAME.add(new Button("interact", "USE", 620, 345, 44));
-        // utility, top-right
-        GAME.add(new Button("switchWeapon", "SWAP", 905, 62, 34));
-        GAME.add(new Button("debug", "BOX", 905, 132, 28));
+    private final List<Button> game = new ArrayList<>();
+    private final List<Button> menu = new ArrayList<>();
 
-        // bonfire menu replaces the layout while open
-        MENU.add(new Button("menuUp", "UP", 110, 440, 56));
-        MENU.add(new Button("menuDown", "DOWN", 240, 440, 56));
-        MENU.add(new Button("interact", "OK", 760, 440, 56));
-        MENU.add(new Button("back", "BACK", 880, 440, 56));
+    /** Builds the button lists from the "game" and "menu" groups in ui.xml. */
+    TouchControls(Ui ui) {
+        for (Map<String, String> b : ui.buttons("game")) game.add(fromXml(b));
+        for (Map<String, String> b : ui.buttons("menu")) menu.add(fromXml(b));
     }
+
+    private static Button fromXml(Map<String, String> b) {
+        return new Button(b.get("action"), b.get("label"), num(b, "x"), num(b, "y"), num(b, "r"));
+    }
+
+    private static double num(Map<String, String> b, String key) { return Double.parseDouble(b.get(key)); }
 
     private final Map<Integer, Button> active = new HashMap<>();
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG), label = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -63,7 +53,7 @@ final class TouchControls {
         label.setTextAlign(Paint.Align.CENTER);
     }
 
-    private List<Button> layout() { return menuLayout ? MENU : GAME; }
+    private List<Button> layout() { return menuLayout ? menu : game; }
 
     /** Call once per frame before the world updates. Switching layouts releases every held button. */
     void sync(boolean menu, Input in) {
@@ -107,7 +97,7 @@ final class TouchControls {
 
     /** Draws the translucent buttons, brighter while held. */
     void draw(Canvas c, boolean menu, Input in) {
-        List<Button> buttons = menu ? MENU : GAME;
+        List<Button> buttons = menu ? this.menu : game;
         for (Button b : buttons) {
             boolean on = in.held(b.action);
             fill.setColor(on ? Color.argb(150, 255, 255, 255) : Color.argb(55, 255, 255, 255));

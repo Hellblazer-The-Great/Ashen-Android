@@ -14,7 +14,7 @@ import android.view.View;
 public final class GameView extends View {
     private final World world;
     private final Renderer renderer;
-    private final TouchControls touch = new TouchControls();
+    private final TouchControls touch;
     private final Input input = new Input();
     private final int logicalW, logicalH;
 
@@ -41,10 +41,11 @@ public final class GameView extends View {
         }
     };
 
-    public GameView(Context context, World world, Assets assets) {
+    public GameView(Context context, World world, Assets assets, Ui ui) {
         super(context);
         this.world = world;
-        this.renderer = new Renderer(world, assets);
+        this.renderer = new Renderer(world, assets, ui);
+        this.touch = new TouchControls(ui);
         this.logicalW = (int) world.screenW;
         this.logicalH = (int) world.screenH;
         setKeepScreenOn(true);
