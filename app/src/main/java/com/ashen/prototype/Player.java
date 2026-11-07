@@ -127,7 +127,19 @@ final class Player extends Actor {
     static final double ACCEL = 2600;
     static final double MOVE_DEAD = 0.01;
 
+    /** Horizontal velocity locked at takeoff; the jump keeps this direction until landing. */
+    private double airVx;
+    private boolean airLocked;
+
     private void free(Input in, double ax, double dt) {
+        if (onGround) airLocked = false;
+        if (airLocked) {
+            vx = airVx;                       // airborne: no steering, the jump keeps its direction
+            state = State.WALK;
+            if (in.pressed("light") && stamina > 0) { combo = 0; begin(weapon().light().get(0)); }
+            else if (in.pressed("heavy") && stamina > 0) begin(weapon().heavy());
+            return;
+        }
         boolean blocking = in.held("block") && onGround;
         blockT = blocking ? blockT + dt : 0;
         double target = ax * speed * (blocking ? blockSlow : 1);
@@ -137,7 +149,12 @@ final class Player extends Actor {
         if (moving) facing = ax > 0 ? 1 : -1;
         state = blocking ? State.BLOCK : moving ? State.WALK : State.IDLE;
         if (in.pressed("switchWeapon")) wi = (wi + 1) % weapons.size();
-        if (in.pressed("jump") && onGround && !blocking) { vy = -jumpV; onGround = false; }
+        if (in.pressed("jump") && onGround && !blocking) {
+            vy = -jumpV; onGround = false;
+            airVx = Math.abs(ax) > MOVE_DEAD ? ax * speed : vx;   // lock direction from the stick (or current speed)
+            vx = airVx; airLocked = true;
+            return;
+        }
         if (in.pressed("roll") && onGround && stamina > 0) {
             spend(rollCost); rollDir = moving ? (ax > 0 ? 1 : -1) : facing; facing = (int) rollDir; state = State.ROLL; t = 0; blockT = 0; return;
         }

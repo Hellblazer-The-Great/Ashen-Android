@@ -65,7 +65,7 @@ public class CoreSelfTest {
         assertEquals(4, ui.buttons("menu").size());
         assertEquals("LIGHT", ui.buttons("game").get(1).get("label"));
         assertEquals(20, ui.num("health", "x", -1), 0.001);
-        assertEquals("v0.3.0", ui.str("version", "text", ""));
+        assertEquals("v0.3.1", ui.str("version", "text", ""));
     }
 
     @Test

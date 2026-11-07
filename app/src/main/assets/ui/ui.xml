@@ -17,7 +17,7 @@
   <text id="deathText" cy="0" size="64" color="#be1919" text="YOU DIED"/>
 
   <!-- ===== Version (keep text equal to appVersionName in gradle.properties) ===== -->
-  <text id="version" x="868" y="530" size="12" color="#7a7a7a" text="v0.3.0"/>
+  <text id="version" x="868" y="530" size="12" color="#7a7a7a" text="v0.3.1"/>
 
   <!-- ===== World labels ===== -->
   <text id="restPrompt" dy="-90" size="16" color="#ffffff" text="REST"/>
