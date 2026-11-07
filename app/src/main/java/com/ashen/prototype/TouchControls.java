@@ -40,10 +40,6 @@ final class TouchControls {
         joyDead = ui.num("move", "deadzone", 0.12);
         joyHomeX = ui.num("move", "x", 150);
         joyHomeY = ui.num("move", "y", 455);
-        zoneX = ui.num("move", "zoneX", 0);
-        zoneY = ui.num("move", "zoneY", 250);
-        zoneW = ui.num("move", "zoneW", 500);
-        zoneH = ui.num("move", "zoneH", 290);
         joyColor = ui.str("move", "color", "#ffffff");
         joyX = joyHomeX; joyY = joyHomeY; knobX = joyHomeX; knobY = joyHomeY;
         label.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
@@ -58,7 +54,7 @@ final class TouchControls {
     private final Map<Integer, Button> active = new HashMap<>();
 
     // floating analog stick for movement
-    private final double joyRadius, joyDead, joyHomeX, joyHomeY, zoneX, zoneY, zoneW, zoneH;
+    private final double joyRadius, joyDead, joyHomeX, joyHomeY;
     private final String joyColor;
     private int joyPointer = -1;
     private double joyX, joyY, knobX, knobY;
@@ -96,9 +92,7 @@ final class TouchControls {
         in.setAxis(v);
     }
 
-    private boolean inStickZone(double x, double y) {
-        return x >= zoneX && x <= zoneX + zoneW && y >= zoneY && y <= zoneY + zoneH;
-    }
+
 
     private Button hit(double x, double y) {
         for (Button b : layout()) if (b.contains(x, y)) return b;
@@ -112,9 +106,11 @@ final class TouchControls {
             in.press(b.action);
             return;
         }
-        if (!menuLayout && joyPointer == -1 && inStickZone(x, y)) {
+        // static stick: it starts only when the press lands on its base, and always reads from the home position
+        double dx = x - joyHomeX, dy = y - joyHomeY;
+        if (!menuLayout && joyPointer == -1 && dx * dx + dy * dy <= joyRadius * joyRadius * 1.3 * 1.3) {
             joyPointer = pointer;
-            joyX = x; joyY = y;
+            joyX = joyHomeX; joyY = joyHomeY;
             updateStick(x, y, in);
         }
     }
@@ -164,7 +160,7 @@ final class TouchControls {
     private void drawStick(Canvas c) {
         boolean active = joyPointer != -1;
         int base = Color.parseColor(joyColor);
-        double bx = active ? joyX : joyHomeX, by = active ? joyY : joyHomeY;
+        double bx = joyHomeX, by = joyHomeY;
         fill.setColor(Color.argb(active ? 70 : 35, Color.red(base), Color.green(base), Color.blue(base)));
         c.drawCircle((float) bx, (float) by, (float) joyRadius, fill);
         fill.setColor(Color.argb(active ? 190 : 90, Color.red(base), Color.green(base), Color.blue(base)));

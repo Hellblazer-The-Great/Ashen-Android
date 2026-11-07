@@ -3,6 +3,9 @@
 All notable changes to Ashen Prototype (Android). Versions follow `MAJOR.MINOR.PATCH`; `versionCode` in
 `gradle.properties` increases with every release.
 
+## 0.3.1.1 (versionCode 6)
+- Movement stick is static again: a fixed base in the bottom-left, started by pressing on it.
+
 ## 0.3.1 (versionCode 5)
 - Jumps lock their horizontal direction at takeoff: a jump made while pushing the stick keeps moving that way
   until landing, and releasing the stick in the air no longer stops you.

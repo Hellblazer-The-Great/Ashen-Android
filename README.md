@@ -44,14 +44,14 @@ For example `<text id="banner" cy="-40" .../>` draws the banner 40 units above t
 Colours are `#rrggbb`. Labels are `text` attributes.
 
 Touch buttons live in the `<touch>` block. `group="game"` buttons appear during play and `group="menu"` buttons
-replace them while the bonfire menu is open. Movement is an analog joystick (the `move` element in ui.xml). Other buttons have an `action`, which is one of the game's input actions:
+replace them while the bonfire menu is open. Movement is a static analog stick (the `move` element in ui.xml). Other buttons have an `action`, which is one of the game's input actions:
 `jump`, `light`, `heavy`, `block`, `roll`, `flask`, `interact`, `switchWeapon`, `debug`,
 `menuUp`, `menuDown`, `back`. Set `x`, `y` and radius `r` to move it.
 
 ## Controls (on-screen)
 | Button | Action | Desktop key |
 |---|---|---|
-| stick (bottom-left) | move | A / D |
+| stick (bottom-left, static) | move | A / D |
 | JUMP | jump | W |
 | LIGHT | light combo | J |
 | HEAVY | heavy attack | K |
