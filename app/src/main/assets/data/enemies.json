@@ -39,7 +39,7 @@
     ],
     "sprite": {
       "scale": 1.7,
-      "facesRight": true,
+      "facesRight": false,
       "cx": 32,
       "feet": 48,
       "anims": {
@@ -103,7 +103,7 @@
     ],
     "sprite": {
       "scale": 2.3,
-      "facesRight": true,
+      "facesRight": false,
       "cx": 32,
       "feet": 48,
       "anims": {
@@ -188,7 +188,7 @@
     ],
     "sprite": {
       "scale": 3.0,
-      "facesRight": true,
+      "facesRight": false,
       "cx": 32,
       "feet": 48,
       "anims": {

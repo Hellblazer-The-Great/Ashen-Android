@@ -3,6 +3,10 @@
 All notable changes to Ashen Prototype (Android). Versions follow `MAJOR.MINOR.PATCH`; `versionCode` in
 `gradle.properties` increases with every release.
 
+## 0.3.5 (versionCode 7)
+- Skeleton enemies no longer face away from the player while approaching or attacking: the Phewcumber skeleton
+  sheets are drawn facing left, so `facesRight` is now `false` for hollow, brute and warden in `enemies.json`.
+
 ## 0.3.1.1 (versionCode 6)
 - Movement stick is static again: a fixed base in the bottom-left, started by pressing on it.
 
